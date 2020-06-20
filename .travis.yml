@@ -1,0 +1,6 @@
+language: c++
+
+jobs:
+  include:
+    - stage: check
+      script: cpplint --recursive --filter=-legal/copyright,-build/c++11 .
