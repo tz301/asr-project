@@ -1,6 +1,6 @@
 language: c++
 
-install: pip install cpplint
+install: sudo pip install cpplint
 
 jobs:
   include:
