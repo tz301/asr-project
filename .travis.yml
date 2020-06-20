@@ -1,5 +1,7 @@
 language: c++
 
+install: pip install cpplint
+
 jobs:
   include:
     - stage: check
