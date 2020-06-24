@@ -1,6 +1,6 @@
 workspace(name = "tz_asr")
 
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
@@ -35,9 +35,16 @@ http_archive(
 load("@org_tensorflow//tensorflow:workspace.bzl", "tf_workspace")
 tf_workspace(tf_repo_name = "org_tensorflow")
 
-new_git_repository(
+# local mkl.
+new_local_repository(
+    name = "mkl",
+    build_file = "//:mkl.BUILD",
+    path = "/opt/intel/mkl"
+)
+
+# git clone https://github.com/kaldi-asr/kaldi.git to local.
+new_local_repository(
     name = "kaldi",
-    commit = "83a301b",
     build_file = "//:kaldi.BUILD",
-    remote = "https://github.com/kaldi-asr/kaldi.git"
+    path = "/home/ubuntu/github/kaldi"
 )
