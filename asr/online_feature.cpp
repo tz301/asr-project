@@ -18,11 +18,15 @@ kaldi::MfccOptions ReadMfccOptions(const std::string &config_file) {
 }
 
 /**
- * @brief Construct waveform array.
- * @param waveform waveform.
- * @return Waveform array.
+ * @brief Mfcc extractor accept waveform.
+ * @param online_mfcc online mfcc extractor.
+ * @param sample_rate sample rate.
+ * @param waveform wave form data.
+ * @param is_end is end.
  */
-std::unique_ptr<float[]> WaveformArray(const std::vector<char> &waveform) {
+void MfccAcceptWaveform(const std::unique_ptr<kaldi::OnlineMfcc> &online_mfcc,
+                        float sample_rate, const std::vector<char> &waveform,
+                        bool is_end) {
   auto cols = waveform.size() / 2;
   std::unique_ptr<float[]> waveform_array(new float[cols]);
 
@@ -32,36 +36,38 @@ std::unique_ptr<float[]> WaveformArray(const std::vector<char> &waveform) {
     int16_t k = *waveform_ptr++;
     waveform_array[i] = k;
   }
-  return waveform_array;
+
+  kaldi::SubVector<float> wave(waveform_array.get(), cols);
+  online_mfcc->AcceptWaveform(sample_rate, wave);
+
+  if (is_end) {
+    online_mfcc->InputFinished();
+  }
 }
 
 OnlineMfccExtractor::OnlineMfccExtractor(const std::string &config_file)
-    : mfcc_opts_(ReadMfccOptions(config_file)), online_mfcc_(mfcc_opts_) {}
+    : mfcc_opts_(ReadMfccOptions(config_file)),
+      online_mfcc_(std::unique_ptr<kaldi::OnlineMfcc>(
+          new kaldi::OnlineMfcc(mfcc_opts_))) {}
 
 void OnlineMfccExtractor::AcceptWaveform(float sample_rate,
                                          const std::vector<char> &waveform,
                                          bool is_end) {
-  auto waveform_array = WaveformArray(waveform);
-  kaldi::SubVector<float> wave(waveform_array.get(), waveform.size() / 2);
-  online_mfcc_.AcceptWaveform(sample_rate, wave);
-
-  if (is_end) {
-    online_mfcc_.InputFinished();
-  }
+  MfccAcceptWaveform(online_mfcc_, sample_rate, waveform, is_end);
 }
 
 unsigned OnlineMfccExtractor::NumFramesReady() const {
-  return online_mfcc_.NumFramesReady();
+  return online_mfcc_->NumFramesReady();
 }
 
-unsigned OnlineMfccExtractor::Dim() const { return online_mfcc_.Dim(); }
+unsigned OnlineMfccExtractor::Dim() const { return online_mfcc_->Dim(); }
 
 kaldi::Matrix<float> OnlineMfccExtractor::GetFrames(unsigned start,
                                                     unsigned end) {
   kaldi::Matrix<float> mfcc(end - start, Dim());
   for (unsigned frame = start, row = 0; frame < end; frame++, row++) {
     kaldi::Vector<float> one_row(Dim());
-    online_mfcc_.GetFrame(frame, &one_row);
+    online_mfcc_->GetFrame(frame, &one_row);
     mfcc.CopyRowFromVec(one_row, row);
   }
   return mfcc;
@@ -73,19 +79,14 @@ OnlineIvectorExtractor::OnlineIvectorExtractor(const std::string &iv_dir)
     : mfcc_opts_(ReadMfccOptions(iv_dir + "/mfcc.conf")),
       ivector_conf_(ReadIvectorConfig(iv_dir)),
       ivector_info_(ivector_conf_),
-      online_mfcc_(mfcc_opts_),
-      online_ivector_(ivector_info_, &online_mfcc_) {}
+      online_mfcc_(std::unique_ptr<kaldi::OnlineMfcc>(
+          new kaldi::OnlineMfcc(mfcc_opts_))),
+      online_ivector_(ivector_info_, online_mfcc_.get()) {}
 
 void OnlineIvectorExtractor::AcceptWaveform(float sample_rate,
                                             const std::vector<char> &waveform,
                                             bool is_end) {
-  auto waveform_array = WaveformArray(waveform);
-  kaldi::SubVector<float> wave(waveform_array.get(), waveform.size() / 2);
-  online_mfcc_.AcceptWaveform(sample_rate, wave);
-
-  if (is_end) {
-    online_mfcc_.InputFinished();
-  }
+  MfccAcceptWaveform(online_mfcc_, sample_rate, waveform, is_end);
 }
 
 unsigned OnlineIvectorExtractor::NumFramesReady() const {

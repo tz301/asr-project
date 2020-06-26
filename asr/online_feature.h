@@ -66,8 +66,8 @@ class OnlineMfccExtractor {
   ~OnlineMfccExtractor();
 
  private:
-  const kaldi::MfccOptions mfcc_opts_;  // Mfcc options.
-  kaldi::OnlineMfcc online_mfcc_;       // Online mfcc feature object.
+  const kaldi::MfccOptions mfcc_opts_;              // Mfcc options.
+  std::unique_ptr<kaldi::OnlineMfcc> online_mfcc_;  // Online mfcc extractor.
 };
 
 /**
@@ -128,7 +128,7 @@ class OnlineIvectorExtractor {
   const kaldi::MfccOptions mfcc_opts_;                       // Mfcc options.
   const kaldi::OnlineIvectorExtractionConfig ivector_conf_;  // I-vector config.
   const kaldi::OnlineIvectorExtractionInfo ivector_info_;    // I-vector info.
-  kaldi::OnlineMfcc online_mfcc_;               // Online mfcc extractor.
+  std::unique_ptr<kaldi::OnlineMfcc> online_mfcc_;  // Online mfcc extractor.
   kaldi::OnlineIvectorFeature online_ivector_;  // Online i-vector extractor.
 };
 
