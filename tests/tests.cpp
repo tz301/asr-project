@@ -39,12 +39,11 @@ TEST_F(AsrTest, WaveReaderTest) {
 TEST_F(AsrTest, OnlineMfccExtractorTest) {
   tz_asr::OnlineMfccExtractor mfcc(mfcc_conf_);
   tz_asr::PcmData pcm_data(wav_file_);
-
   mfcc.AcceptWaveform(pcm_data.SampleRate(), pcm_data.Data(), true);
-  auto dim = mfcc.Dim();
+
   auto frames_ready = mfcc.NumFramesReady();
-  EXPECT_EQ(dim, 40);
   EXPECT_EQ(frames_ready, 418);
+  EXPECT_EQ(mfcc.Dim(), 40);
 
   auto feature = mfcc.GetFrames(0, frames_ready);
   EXPECT_EQ(feature.NumRows(), 418);
@@ -58,12 +57,11 @@ TEST_F(AsrTest, OnlineMfccExtractorTest) {
 TEST_F(AsrTest, OnlineIvectorExtractorTest) {
   tz_asr::OnlineIvectorExtractor ivector(ivector_dir_);
   tz_asr::PcmData pcm_data(wav_file_);
-
   ivector.AcceptWaveform(pcm_data.SampleRate(), pcm_data.Data(), true);
-  auto dim = ivector.Dim();
+
   auto frames_ready = ivector.NumFramesReady();
-  EXPECT_EQ(dim, 100);
   EXPECT_EQ(frames_ready, 418);
+  EXPECT_EQ(ivector.Dim(), 100);
 
   auto feature = ivector.GetFrame(frames_ready);
   EXPECT_EQ(feature.Dim(), 100);
@@ -74,18 +72,25 @@ TEST_F(AsrTest, OnlineIvectorExtractorTest) {
  * @brief Test OnlineFeaturePipeline.
  */
 TEST_F(AsrTest, OnlineFeaturePipelineTest) {
-  tz_asr::OnlineFeaturePipeline feature_pipeline(mfcc_conf_);
+  tz_asr::OnlineFeaturePipeline feature_pipeline(ivector_dir_);
   tz_asr::PcmData pcm_data(wav_file_);
-
   feature_pipeline.AcceptWaveform(pcm_data.SampleRate(), pcm_data.Data(), true);
-  auto frames_ready = feature_pipeline.NumFramesReady();
-  EXPECT_EQ(frames_ready, 418);
 
-  auto feature = feature_pipeline.GetFrames(0, frames_ready);
-  auto mfcc = feature.first;
+  auto mfcc_frames_ready = feature_pipeline.MfccFramesReady();
+  auto ivector_frames_ready = feature_pipeline.IvectorFramesReady();
+  EXPECT_EQ(mfcc_frames_ready, 418);
+  EXPECT_EQ(ivector_frames_ready, 418);
+  EXPECT_EQ(feature_pipeline.MfccDim(), 40);
+  EXPECT_EQ(feature_pipeline.IvectorDim(), 100);
+
+  auto mfcc = feature_pipeline.GetMfccFrames(0, mfcc_frames_ready);
   EXPECT_EQ(mfcc.NumRows(), 418);
   EXPECT_EQ(mfcc.NumCols(), 40);
   EXPECT_TRUE(std::fabs(mfcc(0, 0) - 50.2571) < 0.0001);
+
+  auto ivector = feature_pipeline.GetIvectorFrame(ivector_frames_ready);
+  EXPECT_EQ(ivector.Dim(), 100);
+  EXPECT_TRUE(std::fabs(ivector(0) - (-0.128915)) < 0.0001);
 }
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
