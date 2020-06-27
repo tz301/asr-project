@@ -99,7 +99,7 @@ class OnlineIvectorExtractor {
 
   /**
    * @brief Get feature dimension.
-   * @return dimension.
+   * @return feature dimension.
    */
   unsigned Dim() const;
 
@@ -154,24 +154,49 @@ class OnlineFeaturePipeline {
                       bool is_end);
 
   /**
-   * @brief Get number of ready frames.
-   * @return number of ready frames.
+   * @brief Get number of ready frames for mfcc.
+   * @return number of ready frames for mfcc.
    */
-  unsigned NumFramesReady() const;
+  unsigned MfccFramesReady() const;
 
   /**
-   * @brief Get feature matrix pair, {mfcc, i-vector}.
+   * @brief Get number of ready frames for i-vector.
+   * @return number of ready frames for i-vector.
+   */
+  unsigned IvectorFramesReady() const;
+
+  /**
+   * @brief Get mfcc feature dimension.
+   * @return mfcc feature dimension.
+   */
+  unsigned MfccDim() const;
+
+  /**
+   * @brief Get i-vector feature dimension.
+   * @return i-vector feature dimension.
+   */
+  unsigned IvectorDim() const;
+
+  /**
+   * @brief Get mfcc feature matrix.
    * @param start start frame index.
    * @param end end frame index.
-   * @return feature matrix pair, {mfcc, i-vector}.
+   * @return mfcc feature matrix.
    */
-  std::pair<kaldi::Matrix<float>, kaldi::Matrix<float>> GetFrames(
-      unsigned start, unsigned end);
+  kaldi::Matrix<float> GetMfccFrames(unsigned start, unsigned end);
+
+  /**
+   * @brief Get i-vector feature vector.
+   * @param frame frame index.
+   * @return i-vector feature vector.
+   */
+  kaldi::Vector<float> GetIvectorFrame(unsigned frame);
 
   ~OnlineFeaturePipeline();
 
  private:
-  OnlineMfccExtractor online_mfcc_;  // !< Online mfcc extractor.
+  OnlineMfccExtractor online_mfcc_;        // !< Online mfcc extractor.
+  OnlineIvectorExtractor online_ivector_;  // !< Online i-vector extractor.
 };
 
 }  // namespace tz_asr
