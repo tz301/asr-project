@@ -61,6 +61,11 @@ class OnlineMfccExtractor {
   kaldi::Matrix<float> GetFrames(unsigned start, unsigned end);
 
   /**
+   * @brief Reset all inner variables.
+   */
+  void Reset();
+
+  /**
    * @brief Destroy the Online Mfcc Extractor object.
    */
   ~OnlineMfccExtractor();
@@ -111,6 +116,11 @@ class OnlineIvectorExtractor {
   kaldi::Vector<float> GetFrame(unsigned frame);
 
   /**
+   * @brief Reset all inner variables.
+   */
+  void Reset();
+
+  /**
    * @brief Destroy the Online Ivector Extractor object.
    */
   ~OnlineIvectorExtractor();
@@ -129,7 +139,8 @@ class OnlineIvectorExtractor {
   const kaldi::OnlineIvectorExtractionConfig ivector_conf_;  // I-vector config.
   const kaldi::OnlineIvectorExtractionInfo ivector_info_;    // I-vector info.
   std::unique_ptr<kaldi::OnlineMfcc> online_mfcc_;  // Online mfcc extractor.
-  kaldi::OnlineIvectorFeature online_ivector_;  // Online i-vector extractor.
+  // Online i-vector extractor.
+  std::unique_ptr<kaldi::OnlineIvectorFeature> online_ivector_;
 };
 
 /**
@@ -192,6 +203,14 @@ class OnlineFeaturePipeline {
    */
   kaldi::Vector<float> GetIvectorFrame(unsigned frame);
 
+  /**
+   * @brief Reset all inner variables.
+   */
+  void Reset();
+
+  /**
+   * @brief Destroy the Online Feature Pipeline object.
+   */
   ~OnlineFeaturePipeline();
 
  private:
