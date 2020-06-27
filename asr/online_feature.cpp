@@ -73,6 +73,11 @@ kaldi::Matrix<float> OnlineMfccExtractor::GetFrames(unsigned start,
   return mfcc;
 }
 
+void OnlineMfccExtractor::Reset() {
+  online_mfcc_ =
+      std::unique_ptr<kaldi::OnlineMfcc>(new kaldi::OnlineMfcc(mfcc_opts_));
+}
+
 OnlineMfccExtractor::~OnlineMfccExtractor() = default;
 
 OnlineIvectorExtractor::OnlineIvectorExtractor(const std::string &iv_dir)
@@ -81,7 +86,9 @@ OnlineIvectorExtractor::OnlineIvectorExtractor(const std::string &iv_dir)
       ivector_info_(ivector_conf_),
       online_mfcc_(std::unique_ptr<kaldi::OnlineMfcc>(
           new kaldi::OnlineMfcc(mfcc_opts_))),
-      online_ivector_(ivector_info_, online_mfcc_.get()) {}
+      online_ivector_(std::unique_ptr<kaldi::OnlineIvectorFeature>(
+          new kaldi::OnlineIvectorFeature(ivector_info_, online_mfcc_.get()))) {
+}
 
 void OnlineIvectorExtractor::AcceptWaveform(float sample_rate,
                                             const std::vector<char> &waveform,
@@ -90,15 +97,22 @@ void OnlineIvectorExtractor::AcceptWaveform(float sample_rate,
 }
 
 unsigned OnlineIvectorExtractor::NumFramesReady() const {
-  return online_ivector_.NumFramesReady();
+  return online_ivector_->NumFramesReady();
 }
 
-unsigned OnlineIvectorExtractor::Dim() const { return online_ivector_.Dim(); }
+unsigned OnlineIvectorExtractor::Dim() const { return online_ivector_->Dim(); }
 
 kaldi::Vector<float> OnlineIvectorExtractor::GetFrame(unsigned frame) {
   kaldi::Vector<float> ivector(Dim());
-  online_ivector_.GetFrame(frame, &ivector);
+  online_ivector_->GetFrame(frame, &ivector);
   return ivector;
+}
+
+void OnlineIvectorExtractor::Reset() {
+  online_mfcc_ =
+      std::unique_ptr<kaldi::OnlineMfcc>(new kaldi::OnlineMfcc(mfcc_opts_));
+  online_ivector_ = std::unique_ptr<kaldi::OnlineIvectorFeature>(
+      new kaldi::OnlineIvectorFeature(ivector_info_, online_mfcc_.get()));
 }
 
 OnlineIvectorExtractor::~OnlineIvectorExtractor() = default;
@@ -146,6 +160,11 @@ kaldi::Matrix<float> OnlineFeaturePipeline::GetMfccFrames(unsigned start,
 
 kaldi::Vector<float> OnlineFeaturePipeline::GetIvectorFrame(unsigned frame) {
   return online_ivector_.GetFrame(frame);
+}
+
+void OnlineFeaturePipeline::Reset() {
+  online_mfcc_.Reset();
+  online_ivector_.Reset();
 }
 
 OnlineFeaturePipeline::~OnlineFeaturePipeline() = default;
