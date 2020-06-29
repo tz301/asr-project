@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "asr/online_feature.h"
+#include "asr/asr.h"
 #include "asr/wave_reader.h"
 
 /**
@@ -15,13 +15,11 @@ class AsrTest : public ::testing::Test {
    */
   void SetUp() override {
     wav_file_ = "tests/test.wav";
-    ivector_dir_ = "tests/ivector_extractor";
-    mfcc_conf_ = ivector_dir_ + "/mfcc.conf";
+    model_dir_ = "tests/model";
   }
 
   std::string wav_file_;
-  std::string ivector_dir_;
-  std::string mfcc_conf_;
+  std::string model_dir_;
 };
 
 /**
@@ -34,55 +32,11 @@ TEST_F(AsrTest, WaveReaderTest) {
 }
 
 /**
- * @brief Test OnlineMfccExtractor.
- */
-TEST_F(AsrTest, OnlineMfccExtractorTest) {
-  tz_asr::OnlineMfccExtractor mfcc(mfcc_conf_);
-  tz_asr::PcmData pcm_data(wav_file_);
-
-  for (unsigned i = 0; i < 2; ++i) {
-    mfcc.AcceptWaveform(pcm_data.SampleRate(), pcm_data.Data(), true);
-
-    auto frames_ready = mfcc.NumFramesReady();
-    EXPECT_EQ(frames_ready, 418);
-    EXPECT_EQ(mfcc.Dim(), 40);
-
-    auto feature = mfcc.GetFrames(0, frames_ready);
-    EXPECT_EQ(feature.NumRows(), 418);
-    EXPECT_EQ(feature.NumCols(), 40);
-    EXPECT_TRUE(std::fabs(feature(0, 0) - 50.2571) < 0.0001);
-
-    mfcc.Reset();
-  }
-}
-
-/**
- * @brief Test OnlineIvectorExtractor.
- */
-TEST_F(AsrTest, OnlineIvectorExtractorTest) {
-  tz_asr::OnlineIvectorExtractor ivector(ivector_dir_);
-  tz_asr::PcmData pcm_data(wav_file_);
-
-  for (unsigned i = 0; i < 2; ++i) {
-    ivector.AcceptWaveform(pcm_data.SampleRate(), pcm_data.Data(), true);
-
-    auto frames_ready = ivector.NumFramesReady();
-    EXPECT_EQ(frames_ready, 418);
-    EXPECT_EQ(ivector.Dim(), 100);
-
-    auto feature = ivector.GetFrame(frames_ready);
-    EXPECT_EQ(feature.Dim(), 100);
-    EXPECT_TRUE(std::fabs(feature(0) - (-0.128915)) < 0.0001);
-
-    ivector.Reset();
-  }
-}
-
-/**
  * @brief Test OnlineFeaturePipeline.
  */
 TEST_F(AsrTest, OnlineFeaturePipelineTest) {
-  tz_asr::OnlineFeaturePipeline feature_pipeline(ivector_dir_);
+  std::string ivector_dir = model_dir_ + "/ivector_extractor";
+  tz_asr::OnlineFeaturePipeline feature_pipeline(ivector_dir);
   tz_asr::PcmData pcm_data(wav_file_);
 
   for (unsigned i = 0; i < 2; ++i) {
@@ -93,21 +47,37 @@ TEST_F(AsrTest, OnlineFeaturePipelineTest) {
     auto ivector_frames_ready = feature_pipeline.IvectorFramesReady();
     EXPECT_EQ(mfcc_frames_ready, 418);
     EXPECT_EQ(ivector_frames_ready, 418);
-    EXPECT_EQ(feature_pipeline.MfccDim(), 40);
-    EXPECT_EQ(feature_pipeline.IvectorDim(), 100);
 
-    auto mfcc = feature_pipeline.GetMfccFrames(0, mfcc_frames_ready);
-    EXPECT_EQ(mfcc.NumRows(), 418);
-    EXPECT_EQ(mfcc.NumCols(), 40);
-    EXPECT_TRUE(std::fabs(mfcc(0, 0) - 50.2571) < 0.0001);
+    auto mfcc_dim = feature_pipeline.MfccDim();
+    auto ivector_dim = feature_pipeline.IvectorDim();
+    EXPECT_EQ(mfcc_dim, 40);
+    EXPECT_EQ(ivector_dim, 100);
 
-    auto ivector = feature_pipeline.GetIvectorFrame(ivector_frames_ready);
-    EXPECT_EQ(ivector.Dim(), 100);
-    EXPECT_TRUE(std::fabs(ivector(0) - (-0.128915)) < 0.0001);
+    kaldi::Vector<float> mfcc(mfcc_dim);
+    kaldi::Vector<float> ivector(ivector_dim);
+    feature_pipeline.GetMfccFrame(0, &mfcc);
+    feature_pipeline.GetIvectorFrame(66, &ivector);
+    EXPECT_TRUE(std::fabs(mfcc(0) - 50.2571) < 0.0001);
+    EXPECT_TRUE(std::fabs(ivector(0) - (-0.136949)) < 0.0001);
 
     feature_pipeline.Reset();
   }
 }
+
+/**
+ * @brief Test OnlineAsr.
+ */
+TEST_F(AsrTest, OnlineAsrTest) {
+  tz_asr::OnlineAsr online_asr(model_dir_);
+  tz_asr::PcmData pcm_data(wav_file_);
+}
+
+/**
+ * @brief Main.
+ * @param argc argc.
+ * @param argv argv.
+ * @return test flag.
+ */
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
