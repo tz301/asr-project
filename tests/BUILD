@@ -3,9 +3,9 @@ cc_test(
     srcs = ["tests.cpp"],
     deps = [
         "@gtest//:gtest",
-        "//asr:online_feature",
+        "//asr:asr",
         "//asr:wave_reader"
     ],
-    data = ["test.wav", "ivector_extractor"],
+    data = ["test.wav", "model"],
     linkopts = ["-ldl"]
 )
