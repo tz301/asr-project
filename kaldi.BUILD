@@ -31,11 +31,18 @@ cc_library(
     name = "online2",
     hdrs = ["src/online2/online-ivector-feature.h"],
     srcs = ["src/online2/online-ivector-feature.cc"],
-    deps = ["decoder", "feat", "ivector"],
+    deps = ["decoder", "feat", "ivector", "nnet3"],
     strip_include_prefix = "src",
     visibility = ["//visibility:public"]
 )
 
+cc_library(
+    name = "chain",
+    hdrs = glob(["src/chain/*.h"]),
+    srcs  = glob(["src/chain/*.cc"],exclude = ["src/chain/*test.cc"]),
+    deps = ["fstext", "lat", "utils"],
+    strip_include_prefix = "src",
+)
 
 cc_library(
     name = "decoder",
@@ -44,14 +51,16 @@ cc_library(
         "src/decoder/lattice-faster-decoder.h",
         "src/decoder/lattice-faster-online-decoder.h",
         "src/decoder/lattice-incremental-decoder.h",
-        "src/decoder/lattice-incremental-online-decoder.h"
+        "src/decoder/lattice-incremental-online-decoder.h",
+        "src/decoder/decodable-matrix.h"
     ],
     srcs = [
         "src/decoder/grammar-fst.cc",
         "src/decoder/lattice-faster-decoder.cc",
         "src/decoder/lattice-faster-online-decoder.cc",
         "src/decoder/lattice-incremental-decoder.cc",
-        "src/decoder/lattice-incremental-online-decoder.cc"
+        "src/decoder/lattice-incremental-online-decoder.cc",
+        "src/decoder/decodable-matrix.cc"
     ],
     deps = ["lat"],
     strip_include_prefix = "src"
@@ -68,6 +77,7 @@ cc_library(
 cc_library(
     name = "gmm",
     hdrs = [
+        "src/gmm/am-diag-gmm.h",
         "src/gmm/diag-gmm.h",
         "src/gmm/diag-gmm-inl.h",
         "src/gmm/diag-gmm-normal.h",
@@ -77,6 +87,7 @@ cc_library(
         "src/gmm/model-common.h"
     ],
     srcs = [
+        "src/gmm/am-diag-gmm.cc",
         "src/gmm/diag-gmm.cc",
         "src/gmm/diag-gmm-normal.cc",
         "src/gmm/full-gmm.cc",
@@ -134,23 +145,31 @@ cc_library(
 cc_library(
     name = "lattice",
     hdrs = ["src/lat/kaldi-lattice.h"],
-    srcs = ["src/lat/kaldi-lattice.h"],
+    srcs = ["src/lat/kaldi-lattice.cc"],
     deps = ["fstext"],
     strip_include_prefix = "src"
 )
 
 cc_library(
+    name = "nnet3",
+    hdrs = glob(["src/nnet3/*.h"]),
+    srcs  = glob(["src/nnet3/*.cc"],exclude = ["src/nnet3/*test.cc"]),
+    deps = ["chain", "decoder", "gmm", "hmm"],
+    strip_include_prefix = "src",
+)
+
+cc_library(
     name = "openfst",
-    srcs  = glob(
-        [
-            "tools/openfst/src/lib/*.cc",
-            "tools/openfst/src/script/*.cc"
-        ]
-    ),
     hdrs = glob(
         [
             "tools/openfst/include/fst/*.h",
             "tools/openfst/include/fst/script/*.h"
+        ]
+    ),
+    srcs  = glob(
+        [
+            "tools/openfst/src/lib/*.cc",
+            "tools/openfst/src/script/*.cc"
         ]
     ),
     strip_include_prefix = "tools/openfst/include"
@@ -194,6 +213,7 @@ cc_library(
         [
             "src/base/*.h",
             "src/itf/*.h",
+            "src/cudamatrix/*.h",
             "src/matrix/*.h",
             "src/util/*.h"
         ]
@@ -201,11 +221,13 @@ cc_library(
     srcs = glob(
         [
             "src/base/*.cc",
+            "src/cudamatrix/*.cc",
             "src/matrix/*.cc",
             "src/util/*.cc"
         ],
         exclude = [
             "src/base/*test.cc",
+            "src/cudamatrix/*test.cc",
             "src/matrix/*test.cc",
             "src/util/*test.cc"
         ]
