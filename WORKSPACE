@@ -46,13 +46,13 @@ tf_workspace(tf_repo_name = "org_tensorflow")
 # local mkl.
 new_local_repository(
     name = "mkl",
-    build_file = "//:mkl.BUILD",
+    build_file = "//third_party:mkl.BUILD",
     path = "/opt/intel/mkl"
 )
 
 # git clone https://github.com/kaldi-asr/kaldi.git to local.
 new_local_repository(
     name = "kaldi",
-    build_file = "//:kaldi.BUILD",
+    build_file = "//third_party:kaldi.BUILD",
     path = "/home/ubuntu/github/kaldi"
 )
