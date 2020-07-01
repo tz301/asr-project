@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "asr/asr.h"
+#include "asr/online_asr.h"
 #include "asr/wave_reader.h"
 
 /**
@@ -70,6 +70,21 @@ TEST_F(AsrTest, OnlineFeaturePipelineTest) {
 TEST_F(AsrTest, OnlineAsrTest) {
   tz_asr::OnlineAsr online_asr(model_dir_);
   tz_asr::PcmData pcm_data(wav_file_);
+
+  size_t chunk_size = 6400;  // 200ms for 16k wav.
+  auto data = pcm_data.Data();
+  auto length = data.size();
+
+  size_t start = 0;
+  for (; start + chunk_size < length; start += chunk_size) {
+    auto end = start + chunk_size;
+    std::vector<char> chunk_data(data.begin() + start, data.begin() + end);
+    online_asr.Recognize(pcm_data.SampleRate(), chunk_data, false);
+  }
+
+  std::vector<char> end_data(data.begin() + start, data.end());
+  auto transcript = online_asr.Recognize(pcm_data.SampleRate(), end_data, true);
+  EXPECT_EQ(transcript, "甚至出现交易几乎停滞的情况");
 }
 
 /**

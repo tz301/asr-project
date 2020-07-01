@@ -3,7 +3,7 @@ cc_test(
     srcs = ["tests.cpp"],
     deps = [
         "@gtest//:gtest",
-        "//asr:asr",
+        "//asr:online_asr",
         "//asr:wave_reader"
     ],
     data = ["test.wav", "model"],
