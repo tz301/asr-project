@@ -1,16 +1,8 @@
 cc_library(
-    name = "asr",
-    hdrs = ["asr.h"],
-    srcs = ["asr.cpp"],
-    deps = ["online_feature", "model"],
-    visibility = ["//visibility:public"]
-)
-
-cc_library(
-    name = "online_feature",
-    hdrs = ["online_feature.h"],
-    srcs = ["online_feature.cpp"],
-    deps = ["@kaldi//:feat", "@kaldi//:online2"],
+    name = "online_asr",
+    hdrs = ["online_asr.h"],
+    srcs = ["online_asr.cpp"],
+    deps = ["online_feature", "model", "online_decoder"],
     visibility = ["//visibility:public"]
 )
 
@@ -22,6 +14,20 @@ cc_library(
 )
 
 cc_library(
+    name = "online_decoder",
+    hdrs = ["online_decoder.h"],
+    srcs = ["online_decoder.cpp"],
+    deps = ["@boost//:locale", "@kaldi//:online2"],
+)
+
+cc_library(
+    name = "online_feature",
+    hdrs = ["online_feature.h"],
+    srcs = ["online_feature.cpp"],
+    deps = ["@kaldi//:feat", "@kaldi//:online2"],
+)
+
+cc_library(
     name = "model",
     hdrs = ["model.h"],
     srcs = ["model.cpp"],
@@ -29,5 +35,4 @@ cc_library(
         "@org_tensorflow//tensorflow/cc/saved_model:loader",
         "@kaldi//:feat",
     ],
-    visibility = ["//visibility:public"]
 )
