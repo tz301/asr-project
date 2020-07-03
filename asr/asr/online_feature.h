@@ -1,7 +1,7 @@
 // Created by tz301 on 2020/06/19
 
-#ifndef ASR_ONLINE_FEATURE_H_
-#define ASR_ONLINE_FEATURE_H_
+#ifndef ASR_ASR_ONLINE_FEATURE_H_
+#define ASR_ASR_ONLINE_FEATURE_H_
 
 #include <memory>
 #include <string>
@@ -116,4 +116,4 @@ class OnlineFeaturePipeline {
 
 }  // namespace tz_asr
 
-#endif  // ASR_ONLINE_FEATURE_H_
+#endif  // ASR_ASR_ONLINE_FEATURE_H_

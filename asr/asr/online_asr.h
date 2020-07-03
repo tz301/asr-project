@@ -1,14 +1,15 @@
 // Created by tz301 on 2020/06/17
 
-#ifndef ASR_ONLINE_ASR_H_
-#define ASR_ONLINE_ASR_H_
+#ifndef ASR_ASR_ONLINE_ASR_H_
+#define ASR_ASR_ONLINE_ASR_H_
 
 #include <string>
 #include <vector>
 
-#include "asr/model.h"
-#include "asr/online_decoder.h"
-#include "asr/online_feature.h"
+#include "asr/asr/model.h"
+#include "asr/asr/online_decoder.h"
+#include "asr/asr/online_feature.h"
+#include "asr/asr/wave_reader.h"
 
 namespace tz_asr {
 

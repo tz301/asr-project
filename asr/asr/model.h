@@ -1,7 +1,7 @@
 // Created by tz301 on 2020/06/28
 
-#ifndef ASR_MODEL_H_
-#define ASR_MODEL_H_
+#ifndef ASR_ASR_MODEL_H_
+#define ASR_ASR_MODEL_H_
 
 #include <memory>
 #include <string>
@@ -58,4 +58,4 @@ class Model {
 
 }  // namespace tz_asr
 
-#endif  // ASR_MODEL_H_
+#endif  // ASR_ASR_MODEL_H_

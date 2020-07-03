@@ -1,7 +1,7 @@
 // Created by tz301 on 2020/07/01
 
-#ifndef ASR_ONLINE_DECODER_H_
-#define ASR_ONLINE_DECODER_H_
+#ifndef ASR_ASR_ONLINE_DECODER_H_
+#define ASR_ASR_ONLINE_DECODER_H_
 
 #include <memory>
 #include <string>
@@ -124,4 +124,4 @@ class OnlineDecoder {
 
 }  // namespace tz_asr
 
-#endif  // ASR_ONLINE_DECODER_H_
+#endif  // ASR_ASR_ONLINE_DECODER_H_

@@ -1,7 +1,7 @@
 // Created by tz301 on 2020/06/19.
 
-#ifndef ASR_WAVE_READER_H_
-#define ASR_WAVE_READER_H_
+#ifndef ASR_ASR_WAVE_READER_H_
+#define ASR_ASR_WAVE_READER_H_
 
 #include <string>
 #include <vector>
@@ -63,4 +63,4 @@ class PcmData {
 
 }  // namespace tz_asr
 
-#endif  // ASR_WAVE_READER_H_
+#endif  // ASR_ASR_WAVE_READER_H_

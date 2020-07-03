@@ -1,6 +1,6 @@
 // Created by tz301 on 2020/06/19.
 
-#include "asr/wave_reader.h"
+#include "asr/asr/wave_reader.h"
 
 #include <fstream>
 
