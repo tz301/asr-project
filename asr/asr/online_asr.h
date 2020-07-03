@@ -78,4 +78,4 @@ class OnlineAsr {
 
 }  // namespace tz_asr
 
-#endif  // ASR_ONLINE_ASR_H_
+#endif  // ASR_ASR_ONLINE_ASR_H_
