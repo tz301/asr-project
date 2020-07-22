@@ -5,4 +5,5 @@ matrix:
       script: python3 -m pylint --indent-string='  ' --max-line-length=80 tests asr
 
     - language: c++
+      install: sudo pip install cpplint
       script: cpplint --recursive --filter=-legal/copyright,-build/c++11 .
