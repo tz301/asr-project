@@ -1,8 +1,16 @@
 language: c++
 
+language: python
+python: "3.7"
+
 install: sudo pip install cpplint
 
 jobs:
   include:
     - stage: check
       script: cpplint --recursive --filter=-legal/copyright,-build/c++11 .
+
+jobs:
+  include:
+    - stage: check
+      script: python3 -m pylint --indent-string='  ' --max-line-length=80 tests asr
