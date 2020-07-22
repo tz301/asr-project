@@ -3,6 +3,4 @@
 # Created by tz301 on 2020/07/22
 """Asr python wrap."""
 
-import numpy as np
-
-from .asr_py import *
+from .asr_py import *  # pylint: disable=import-error,wildcard-import
