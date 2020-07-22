@@ -3,8 +3,6 @@ language: c++
 language: python
 python: "3.7"
 
-install: sudo pip install cpplint
-
 jobs:
   include:
     - stage: check
