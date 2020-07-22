@@ -1,14 +1,8 @@
-language: c++
-
-language: python
-python: "3.7"
-
-jobs:
+matrix:
   include:
-    - stage: check
-      script: cpplint --recursive --filter=-legal/copyright,-build/c++11 .
-
-jobs:
-  include:
-    - stage: check
+    - language: python
+      python: "3.7"
       script: python3 -m pylint --indent-string='  ' --max-line-length=80 tests asr
+
+    - language: c++
+      script: cpplint --recursive --filter=-legal/copyright,-build/c++11 .
