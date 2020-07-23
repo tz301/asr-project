@@ -10,7 +10,6 @@ and [Tensorflow](https://github.com/tensorflow/tensorflow).
 * gcc=7.5.0
 * g++=7.5.0
 * bazel=2.0.0
-* swig=3.0.12 (optional)
 
 ## Dependencies
 
@@ -29,11 +28,6 @@ You can use dynamic library for asr system depolyment.
    dynamic library path is `bazel-bin/asr/libasr.so.0.0.0`.
 2. Include `asr/asr.h` and link to `libasr.so.0.0.0` in your code.
 3. Example see [so_example](so_example).
-
-## Python Wrap (Developing)
-
-You can also generate python3 `.whl` package using bazel and swig for
-asr system depolyment.
 
 ## Model preparation
 
