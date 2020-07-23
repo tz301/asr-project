@@ -16,10 +16,3 @@ cc_binary(
     linkstatic = 1,
     linkshared = True,
 )
-
-py_library(
-    name = "asr_py",
-    srcs = ["__init__.py"],
-    deps = ["//asr/pywrap:asr_wrap"],
-    visibility = ["//visibility:public"]
-)
