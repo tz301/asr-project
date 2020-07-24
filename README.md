@@ -1,5 +1,7 @@
 # asr-project
 
+[![Build Status](https://travis-ci.com/tz301/asr-project.svg?branch=master)](https://travis-ci.com/tz301/asr-project)
+
 ## Introduction
 
 This project shows how to build / deploy fast and independent ASR system based on [Kaldi](https://github.com/kaldi-asr/kaldi)
