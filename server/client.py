@@ -4,6 +4,7 @@
 """Client example."""
 import logging
 
+# pylint: disable=import-error
 from utils import ASR_IP, get_pcm_data_list, init_socket, send_data, TEST_WAV
 
 
