@@ -6,6 +6,7 @@ import logging
 import time
 from pathlib import Path
 
+# pylint: disable=import-error
 from flask import Flask, redirect, render_template, request, url_for
 from utils import ASR_IP, get_pcm_data_list, init_socket, send_data, TEST_WAV
 from werkzeug.utils import secure_filename
@@ -72,8 +73,7 @@ def __asr(pcm_data_list, index):
     if index == len(pcm_data_list) - 1:
       index, stop = 0, 1
       break
-    else:
-      index, stop = index + 1, 0
+    index, stop = index + 1, 0
 
     if time.time() - begin_time > 0.1:
       break
@@ -82,37 +82,40 @@ def __asr(pcm_data_list, index):
 
 def __aishell_asr():
   """Aishell online asr."""
-  global AISHELL_IDX, AISHELL_TRX
+  global AISHELL_IDX, AISHELL_TRX  # pylint: disable=global-statement
   stop, AISHELL_IDX, AISHELL_TRX = __asr(AISHELL_PCM_DATA, AISHELL_IDX)
   return stop
 
 
 def __online_asr():
   """Online asr for upload file."""
-  global IDX, TRX
+  global IDX, TRX  # pylint: disable=global-statement
   stop, IDX, TRX = __asr(PCM_DATA, IDX)
   return stop
 
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-  global PCM_DATA
+  """Upload file."""
+  global PCM_DATA  # pylint: disable=global-statement
   if 'file' not in request.files:
     logging.warning(f'file field not found: {request.files}.')
     return __render('index.html', AISHELL_TRX, TRX)
-  else:
-    logging.info(f'Receive file.')
-    file = request.files['file']
-    if file and __allowed_file(file.filename):
-      time_format = "%Y-%m-%d-%H-%M-%S"
-      cur_time = time.strftime(time_format, time.localtime())
-      filename = Path(secure_filename(file.filename))
-      filename = f'{filename.stem}-{cur_time}{filename.suffix}'
-      audio_path = app.config['UPLOAD_FOLDER'] / filename
-      file.save(audio_path)
-      logging.info(f'Save file to {audio_path}.')
-      PCM_DATA = get_pcm_data_list(audio_path)
-  return redirect(url_for('recognize'))
+
+  logging.info('Receive file.')
+  file = request.files['file']
+  if file and __allowed_file(file.filename):
+    time_format = "%Y-%m-%d-%H-%M-%S"
+    cur_time = time.strftime(time_format, time.localtime())
+    filename = Path(secure_filename(file.filename))
+    filename = f'{filename.stem}-{cur_time}{filename.suffix}'
+    audio_path = app.config['UPLOAD_FOLDER'] / filename
+    file.save(audio_path)
+    logging.info(f'Save file to {audio_path}.')
+    PCM_DATA = get_pcm_data_list(audio_path)
+    return redirect(url_for('recognize'))
+
+  return __render('index.html', AISHELL_TRX, TRX)
 
 
 @app.route('/aishell', methods=['GET', 'POST'])
@@ -120,8 +123,7 @@ def aishell():
   """Test aishell wav."""
   if __aishell_asr():
     return redirect(url_for('home'))
-  else:
-    return __render('index.html', AISHELL_TRX, TRX, stop_aishell=0)
+  return __render('index.html', AISHELL_TRX, TRX, stop_aishell=0)
 
 
 @app.route('/recognize', methods=['GET', 'POST'])
@@ -129,14 +131,13 @@ def recognize():
   """Recognize wav."""
   if __online_asr():
     return redirect(url_for('home'))
-  else:
-    return __render('index.html', AISHELL_TRX, TRX, stop_asr=0)
+  return __render('index.html', AISHELL_TRX, TRX, stop_asr=0)
 
 
 @app.route('/reset', methods=['POST'])
 def reset():
   """Reset."""
-  global TRX, AISHELL_TRX
+  global TRX, AISHELL_TRX  # pylint: disable=global-statement
   TRX, AISHELL_TRX = '', ''
   return redirect(url_for('home'))
 
