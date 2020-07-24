@@ -69,7 +69,7 @@ def __asr(pcm_data_list, index):
   begin_time = time.time()
   while True:
     trx = send_data(SOCKET, pcm_data_list[index])
-    if index == len(AISHELL_PCM_DATA) - 1:
+    if index == len(pcm_data_list) - 1:
       index, stop = 0, 1
       break
     else:
@@ -94,27 +94,25 @@ def __online_asr():
   return stop
 
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload_file():
   global PCM_DATA
-  if request.method == 'POST':
-    if 'file' not in request.files:
-      logging.info(f'file field not found: {request.files}.')
-      return __render('index.html', AISHELL_TRX, TRX)
-    else:
-      logging.info(f'Receive file.')
-      file = request.files['file']
-      if file and __allowed_file(file.filename):
-        filename = Path(secure_filename(file.filename))
-        time_format = "%Y-%m-%d-%H-%M-%S"
-        cur_time = time.strftime(time_format, time.localtime())
-        name = f'{filename.stem}-{cur_time}{filename.suffix}'
-        audio_path = app.config['UPLOAD_FOLDER'] / name
-        file.save(audio_path)
-        logging.info(f'Save file to {audio_path}.')
-        PCM_DATA = get_pcm_data_list(audio_path)
-    return redirect(url_for('recognize'))
-  return __render('index.html', AISHELL_TRX, TRX)
+  if 'file' not in request.files:
+    logging.warning(f'file field not found: {request.files}.')
+    return __render('index.html', AISHELL_TRX, TRX)
+  else:
+    logging.info(f'Receive file.')
+    file = request.files['file']
+    if file and __allowed_file(file.filename):
+      time_format = "%Y-%m-%d-%H-%M-%S"
+      cur_time = time.strftime(time_format, time.localtime())
+      filename = Path(secure_filename(file.filename))
+      filename = f'{filename.stem}-{cur_time}{filename.suffix}'
+      audio_path = app.config['UPLOAD_FOLDER'] / filename
+      file.save(audio_path)
+      logging.info(f'Save file to {audio_path}.')
+      PCM_DATA = get_pcm_data_list(audio_path)
+  return redirect(url_for('recognize'))
 
 
 @app.route('/aishell', methods=['GET', 'POST'])
