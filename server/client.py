@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Created by tz301 on 2020/07/23
-"""客户端样例."""
+"""Client example."""
 import logging
 import wave
 from pathlib import Path
