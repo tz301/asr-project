@@ -7,9 +7,10 @@ import time
 from pathlib import Path
 
 from flask import Flask, redirect, render_template, request, url_for
+from werkzeug.utils import secure_filename
+
 # pylint: disable=import-error
 from utils import ASR_IP, get_pcm_data_list, init_socket, send_data, TEST_WAV
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
