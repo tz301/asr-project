@@ -27,7 +27,11 @@ You can use dynamic library for asr system depolyment.
 1. build: `bazel build asr:libasr.so.0.0.0`,
    dynamic library path is `bazel-bin/asr/libasr.so.0.0.0`.
 2. Include `asr/asr.h` and link to `libasr.so.0.0.0` in your code.
-3. Example see [so_example](so_example).
+3. Example see [server.cpp](server/server.cpp).
+
+## Deployment
+
+You can find server example in [server](server).
 
 ## Model preparation
 
@@ -73,7 +77,7 @@ inference. Also it's convenient for GPU inference.
 A pre-trained model is provided: [model](tests/model).
 
 It's a TDNN-F model trained using kaldi's multi_cn project,
- with ~1200h Mandarin open source data. Some CER below.
+with ~1200h Mandarin open source data. Some CER below.
 
 test_set|cer
 ----|----
@@ -86,4 +90,3 @@ thchs|12.85
 
 * [Kaldi Speech Recognition Toolkit](https://github.com/kaldi-asr/kaldi)
 * [Tensorflow](https://github.com/tensorflow/tensorflow)
-
