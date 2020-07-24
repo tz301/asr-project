@@ -2,3 +2,4 @@
 bazel*
 *so
 *log*
+__pycache__/
