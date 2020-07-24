@@ -1,8 +1,14 @@
 <html>
 
 <head>
-  {% if 0 == stop %}
-  <meta http-equiv="refresh" content="0.5;url={{ url_for('aishell') }}">
+  {% if 0 == stop_aishell %}
+  <meta http-equiv="refresh" content="0.1;url={{ url_for('aishell') }}">
+  {% endif %}
+</head>
+
+<head>
+  {% if 0 == stop_asr %}
+  <meta http-equiv="refresh" content="0.1;url={{ url_for('recognize') }}">
   {% endif %}
 </head>
 
@@ -25,7 +31,7 @@
       </form>
     </th>
     <th>
-      <form class="form" action="/" method="post">
+      <form class="form" action="/reset" method="post">
         <button class="btn btn-primary" type="submit">Reset</button>
       </form>
     </th>
@@ -34,20 +40,34 @@
 </div>
 
 <div class="c" id="show2" >
-  <p style="white-space:pre-line;">{{ s }}</p>
+  <p style="white-space:pre-line;">{{ aishell_trx }}</p>
 </div>
 
 <div class="header">
   <h4> Upload Wav For Asr (Developing) </h4>
-  <form action = "http://localhost:5000/eng/trans" method = "POST"
-    enctype = "multipart/form-data">
-    <input type="file" name="file" >
-    <!-- <input type="submit"> -->
-  </form>
+  <table>
+    <tr>
+      <th>
+        <form action="/upload" method = "POST" enctype = "multipart/form-data">
+          <input type="file" name="file" >
+          <input type="submit" value="识别">
+        </form>
+      </th>
+      <th>
+        <form class="form" action="/reset" method="post">
+        <button class="btn btn-primary" type="submit">Reset</button>
+        </form>
+      </th>
+    </tr>
+  </table>
+</div>
+
+<div class="c" id="show2" >
+  <p style="white-space:pre-line;">{{ trx }}</p>
 </div>
 
 <div class="body">
-  <p> Notice: do not upload audio with much noise or silence, since no VAD is available. </p>
+  <p> Notice: 16k reading model, audio will be converted. No VAD is available. </p>
 </div>
 
 </body>
