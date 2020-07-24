@@ -1,36 +1,20 @@
 // Created by tz301 on 2020/07/03
 
+#include <chrono>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <zmq.hpp>
 
 #include "../asr/asr.h"
 
 /**
- * @brief Test OnlineAsr.
- * @param model_dir model directory.
- * @param wav_file wav file.
+ * @brief Print current time.
  */
-void TestOnlineAsr(const std::string &model_dir, const std::string &wav_file) {
-  asr::OnlineAsr online_asr(model_dir);
-  asr::PcmData pcm_data(wav_file);
-
-  size_t chunk_size = 6400;  // 200ms for 16k wav.
-  auto data = pcm_data.Data();
-  auto sample_rate = pcm_data.SampleRate();
-  auto length = data.size();
-
-  size_t start = 0;
-  for (unsigned i = 1; start + chunk_size < length; start += chunk_size, ++i) {
-    auto end = start + chunk_size;
-    std::vector<char> chunk_data(data.begin() + start, data.begin() + end);
-    auto transcript = online_asr.Recognize(sample_rate, chunk_data, false);
-    std::cout << "Chunk " << i << ": " << transcript << std::endl;
-  }
-
-  std::vector<char> end_data(data.begin() + start, data.end());
-  auto transcript = online_asr.Recognize(sample_rate, end_data, true);
-  std::cout << "Chunk end: " << transcript << std::endl;
+void PrintTime() {
+  auto cur_time = std::chrono::system_clock::now();
+  auto time = std::chrono::system_clock::to_time_t(cur_time);
+  std::cout << std::ctime(&time);
 }
 
 /**
@@ -38,6 +22,35 @@ void TestOnlineAsr(const std::string &model_dir, const std::string &wav_file) {
  */
 int main() {
   std::string model_dir = "../tests/model";
-  std::string wav_file = "../tests/test.wav";
-  TestOnlineAsr(model_dir, wav_file);
+  asr::OnlineAsr online_asr(model_dir);
+
+  zmq::context_t context(1);
+  zmq::socket_t socket(context, ZMQ_REP);
+  socket.bind("tcp://*:6557");
+
+  PrintTime();
+  std::cout << "Server start in port 6557." << std::endl;
+
+  while (true) {
+    zmq::message_t message;
+    socket.recv(&message);
+
+    auto data_ptr = static_cast<char *>(message.data());
+    auto msg_len = message.size();
+    bool is_end = false;
+    if (msg_len % 2 != 0) {
+      is_end = true;
+      --msg_len;
+      PrintTime();
+      std::cout << "Finish." << std::endl;
+    }
+
+    std::vector<char> data(data_ptr, data_ptr + msg_len);
+    auto transcript = online_asr.Recognize(16000, data, is_end);
+
+    auto len = transcript.size();
+    zmq::message_t reply(len);
+    memcpy(reply.data(), transcript.c_str(), len);
+    socket.send(reply);
+  }
 }
