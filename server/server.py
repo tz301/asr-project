@@ -2,74 +2,151 @@
 # -*- coding: utf-8 -*-
 # Created by tz301 on 2020/07/03
 """Deploy."""
-import os
-from pathlib import Path
-from flask import Flask, request, url_for, send_from_directory, render_template
-from werkzeug.utils import secure_filename
 import logging
+import time
+from pathlib import Path
+
+from flask import Flask, redirect, render_template, request, url_for
+from utils import ASR_IP, get_pcm_data_list, init_socket, send_data, TEST_WAV
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-__ALLOWED_EXTENSIONS = {'wav'}
+__ALLOWED_EXTENSIONS = {'.wav'}
+
+SOCKET = init_socket(ASR_IP)
+
+TRX = ''
+IDX = 0
+PCM_DATA = []
+AISHELL_TRX = ''
+AISHELL_IDX = 0
+AISHELL_PCM_DATA = get_pcm_data_list(TEST_WAV)
 
 
-# html = '''
-#   <!DOCTYPE html>
-#   <title>Upload File</title>
-#   <h1>Upload Wav</h1>
-#   <form method=post enctype=multipart/form-data>
-#     <input type=file name=file>
-#     <input type=submit value=上传>
-#   </form>
-# '''
-#
-#
-# def allowed_file(filename):
-#   return Path(filename).suffix in __ALLOWED_EXTENSIONS
-#
-#
-# @app.route('/uploads/<filename>')
-# def uploaded_file(filename):
-#   return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-#
-#
-# @app.route('/', methods=['GET', 'POST'])
-# def upload_file():
-#   if request.method == 'POST':
-#     file = request.files['file']
-#     if file and allowed_file(file.filename):
-#       filename = secure_filename(file.filename)
-#       file.save(app.config['UPLOAD_FOLDER'] / filename)
-#       file_url = url_for('uploaded_file', filename=filename)
-#       return html + '<br><img src=' + file_url + '>'
-#   return html
+def __render(html, aishell_trx='', trx='', stop_aishell=1, stop_asr=1):
+  """Render template.
 
-global INDEX
-INDEX = 0
+  Args:
+    html: html.
+    aishell_trx: transcript for aishell recognize.
+    trx: transcript for upload file recognize.
+    stop_aishell: if aishell recognize stop.
+    stop_asr: if upload file recognize stop.
 
-def online_asr():
-  global INDEX
-
-  chunks = ["甚至出现", "交易几乎", "停滞的情况"]
-  ret = "".join(chunks[:INDEX + 1])
-  if INDEX == len(chunks) - 1:
-    INDEX = 0
-    stop = 1
-  else:
-    INDEX += 1
-    stop = 0
-  return ret, stop
+  Returns:
+    Render template.
+  """
+  base_trx = '识别结果: '
+  aishell_trx = base_trx + aishell_trx
+  trx = base_trx + trx
+  return render_template(html, aishell_trx=aishell_trx, trx=trx,
+                         stop_aishell=stop_aishell, stop_asr=stop_asr)
 
 
-@app.route('/aishell',methods=['GET','POST'])
+def __allowed_file(filename):
+  """If file is supported.
+
+  Args:
+    filename: file name.
+
+  Returns:
+    If file is supported.
+  """
+  return Path(filename).suffix in __ALLOWED_EXTENSIONS
+
+
+def __asr(pcm_data_list, index):
+  """asr.
+
+  Args:
+    pcm_data_list: pcm_data_list.
+    index: index of pcm data.
+
+  Returns:
+    if recognize stop, new index of pcm data and transcript.
+  """
+  begin_time = time.time()
+  while True:
+    trx = send_data(SOCKET, pcm_data_list[index])
+    if index == len(AISHELL_PCM_DATA) - 1:
+      index, stop = 0, 1
+      break
+    else:
+      index, stop = index + 1, 0
+
+    if time.time() - begin_time > 0.1:
+      break
+  return stop, index, trx
+
+
+def __aishell_asr():
+  """Aishell online asr."""
+  global AISHELL_IDX, AISHELL_TRX
+  stop, AISHELL_IDX, AISHELL_TRX = __asr(AISHELL_PCM_DATA, AISHELL_IDX)
+  return stop
+
+
+def __online_asr():
+  """Online asr for upload file."""
+  global IDX, TRX
+  stop, IDX, TRX = __asr(PCM_DATA, IDX)
+  return stop
+
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+  global PCM_DATA
+  if request.method == 'POST':
+    if 'file' not in request.files:
+      logging.info(f'file field not found: {request.files}.')
+      return __render('index.html', AISHELL_TRX, TRX)
+    else:
+      logging.info(f'Receive file.')
+      file = request.files['file']
+      if file and __allowed_file(file.filename):
+        filename = Path(secure_filename(file.filename))
+        time_format = "%Y-%m-%d-%H-%M-%S"
+        cur_time = time.strftime(time_format, time.localtime())
+        name = f'{filename.stem}-{cur_time}{filename.suffix}'
+        audio_path = app.config['UPLOAD_FOLDER'] / name
+        file.save(audio_path)
+        logging.info(f'Save file to {audio_path}.')
+        PCM_DATA = get_pcm_data_list(audio_path)
+    return redirect(url_for('recognize'))
+  return __render('index.html', AISHELL_TRX, TRX)
+
+
+@app.route('/aishell', methods=['GET', 'POST'])
 def aishell():
-  ret, stop = online_asr()
-  return render_template("index.html",s = ret,stop=stop)
+  """Test aishell wav."""
+  if __aishell_asr():
+    return redirect(url_for('home'))
+  else:
+    return __render('index.html', AISHELL_TRX, TRX, stop_aishell=0)
 
 
-@app.route('/',methods=['GET','POST'])
+@app.route('/recognize', methods=['GET', 'POST'])
+def recognize():
+  """Recognize wav."""
+  if __online_asr():
+    return redirect(url_for('home'))
+  else:
+    return __render('index.html', AISHELL_TRX, TRX, stop_asr=0)
+
+
+@app.route('/reset', methods=['POST'])
+def reset():
+  """Reset."""
+  global TRX, AISHELL_TRX
+  TRX, AISHELL_TRX = '', ''
+  return redirect(url_for('home'))
+
+
+@app.route('/')
 def home():
-  return render_template("index.html",s = " ",stop=1)
+  """Home."""
+  return __render('index.html', AISHELL_TRX, TRX)
 
 
 def __main():
@@ -85,4 +162,3 @@ if __name__ == '__main__':
   logging.basicConfig(format='%(asctime)s %(name)s %(levelname)s %(message)s',
                       level=logging.INFO)
   __main()
-
