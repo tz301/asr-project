@@ -6,3 +6,6 @@
 4. build c++ asr server: `make`.
 5. start server in background: `nohup ./server 2>&1 >log_server &.`
 6. test server: `python3 client.py`.
+7. deploy server: `python3 server.py`.
+
+Then you can use [server](http://119.45.150.149:9000/) to recognize audio.
