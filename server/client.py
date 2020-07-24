@@ -40,7 +40,7 @@ def __init_socket(host):
     socket.
   """
   context = zmq.Context()
-  socket = context.socket(zmq.REQ)
+  socket = context.socket(zmq.REQ)  # pylint: disable=no-member
   socket.connect(host)
   __send_data(socket, b'0')
   return socket
