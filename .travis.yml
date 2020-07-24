@@ -2,7 +2,8 @@ matrix:
   include:
     - language: python
       python: "3.7"
-      script: python3 -m pylint --indent-string='  ' --max-line-length=80 server
+      script: python3 -m pylint --indent-string='  ' --max-line-length=80
+              --disable=logging-fstring-interpolation server
 
     - language: c++
       install: sudo pip install cpplint
