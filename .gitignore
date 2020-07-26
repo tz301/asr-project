@@ -3,4 +3,3 @@ bazel*
 *so
 *log*
 __pycache__/
-storage
