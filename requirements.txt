@@ -2,3 +2,4 @@ numpy==1.18.4
 pylint>=2.4.2
 zmq==0.0.0
 flask==1.1.2
+ffmpeg-python==0.2.0

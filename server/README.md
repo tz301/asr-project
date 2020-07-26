@@ -1,5 +1,14 @@
 # Server
 
+## Dependencies
+
+* ffmpeg==4.0.2
+* nasm==2.14rc15
+* cppzmq==4.6.0
+* libzmp=4.3.2
+
+## Server deploy
+
 1. build so: `bazel build asr:libasr.so.0.0.0`.
 2. enter server directory: `cd server`.
 3. link so: `ln -s ../bazel-bin/asr/libasr.so.0.0.0 libasr.so`.
