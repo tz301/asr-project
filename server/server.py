@@ -4,19 +4,20 @@
 """Deploy."""
 import logging
 import time
+from argparse import ArgumentParser
 from pathlib import Path
 
 from flask import Flask, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
 # pylint: disable=import-error
-from utils import ASR_IP, get_pcm_data_list, init_socket, send_data, TEST_WAV
+from utils import asr_ip, get_pcm_data_list, init_socket, send_data, TEST_WAV
 
 app = Flask(__name__)
 
 __ALLOWED_EXTENSIONS = {'.wav'}
 
-SOCKET = init_socket(ASR_IP)
+SOCKET = None
 
 TRX = ''
 IDX = 0
@@ -151,11 +152,19 @@ def home():
 
 def __main():
   """Main function."""
+  parser = ArgumentParser(description="Test asr server.")
+  parser.add_argument("asr_port", type=int, help="asr server port.")
+  parser.add_argument("port", type=int, help="server port for depoly.")
+  args = parser.parse_args()
+
+  global SOCKET
+  SOCKET = init_socket(asr_ip(args.asr_port))
+
   storage_dir = Path('storage')
   storage_dir.mkdir(exist_ok=True)
   app.config['UPLOAD_FOLDER'] = storage_dir
   app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
-  app.run(host='0.0.0.0', port='9000')
+  app.run(host='0.0.0.0', port=f'{args.port}')
 
 
 if __name__ == '__main__':
