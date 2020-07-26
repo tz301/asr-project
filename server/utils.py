@@ -7,8 +7,16 @@ from pathlib import Path
 
 import zmq
 
-ASR_IP = 'tcp://localhost:6557'
 TEST_WAV = Path(__file__).absolute().parent.parent / 'tests/test.wav'
+
+
+def asr_ip(port):
+  """Get asr ip.
+
+  Args:
+    port: port.
+  """
+  return f'tcp://localhost:{port}'
 
 
 def get_pcm_data_list(wav_file):
