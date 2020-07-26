@@ -20,15 +20,20 @@ void PrintTime() {
 /**
  * @brief Main function.
  */
-int main() {
-  std::string model_dir = "../tests/model";
+int main(int argc, char *argv[]) {
+  if (argc != 3) {
+    throw std::invalid_argument("usage: ./server <model_dir> <port>");
+  }
+  std::string model_dir = argv[1];
+  std::string port = argv[2];
   asr::OnlineAsr online_asr(model_dir);
 
   zmq::context_t context(1);
   zmq::socket_t socket(context, ZMQ_REP);
-  socket.bind("tcp://*:6557");
+  socket.bind("tcp://*:" + port);
 
   PrintTime();
+  std::cout << "Load asr model: ." << model_dir << std::endl;
   std::cout << "Server start in port 6557." << std::endl;
 
   while (true) {
