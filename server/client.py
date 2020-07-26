@@ -12,7 +12,7 @@ from utils import asr_ip, get_pcm_data_list, init_socket, send_data, TEST_WAV
 def __main():
   """Main function."""
   parser = ArgumentParser(description="Test asr server.")
-  parser.add_argument("asr_port", type=int, help="asr port.")
+  parser.add_argument("asr_port", type=int, help="asr server port.")
   args = parser.parse_args()
 
   socket = init_socket(asr_ip(args.asr_port))
