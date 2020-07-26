@@ -144,31 +144,29 @@ def upload_file():
 @app.route('/aishell', methods=['GET', 'POST'])
 def aishell():
   """Test aishell wav."""
-  if __aishell_asr():
-    return redirect(url_for('home'))
-  return __render('index.html', AISHELL_TRX, TRX, stop_aishell=0)
+  stop = __aishell_asr()
+  return __render('index.html', AISHELL_TRX, TRX, stop_aishell=stop)
 
 
 @app.route('/recognize', methods=['GET', 'POST'])
 def recognize():
   """Recognize wav."""
-  if __online_asr():
-    return redirect(url_for('home'))
-  return __render('index.html', AISHELL_TRX, TRX, stop_asr=0)
+  stop = __online_asr()
+  return __render('index.html', AISHELL_TRX, TRX, stop_asr=stop)
 
 
 @app.route('/reset', methods=['POST'])
 def reset():
   """Reset."""
-  global IDX, TRX, AISHELL_IDX, AISHELL_TRX  # pylint: disable=global-statement
-  IDX, AISHELL_IDX = 0, 0
-  TRX, AISHELL_TRX = '', ''
   return redirect(url_for('home'))
 
 
 @app.route('/')
 def home():
   """Home."""
+  global IDX, TRX, AISHELL_IDX, AISHELL_TRX  # pylint: disable=global-statement
+  IDX, AISHELL_IDX = 0, 0
+  TRX, AISHELL_TRX = '', ''
   return __render('index.html', AISHELL_TRX, TRX)
 
 
