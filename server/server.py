@@ -131,14 +131,14 @@ def upload_file():
         logging.info(f'Convert to {wav_path}.')
         PCM_DATA = get_pcm_data_list(wav_path)
         return redirect(url_for('recognize'))
-      else:
-        logging.error(f'Error: {wav_path}, {msg}.')
-        return __render('index.html', AISHELL_TRX, msg, stop_asr=1)
+
+      logging.error(f'Error: {wav_path}, {msg}.')
+      return __render('index.html', AISHELL_TRX, msg, stop_asr=1)
     return __render('index.html', AISHELL_TRX, TRX)
 
-  except Exception as e:
-    logging.error(e)
-    return __render('index.html', AISHELL_TRX, str(e), stop_asr=1)
+  except Exception as ex:  # pylint: disable=broad-except.
+    logging.error(ex)
+    return __render('index.html', AISHELL_TRX, str(ex), stop_asr=1)
 
 
 @app.route('/aishell', methods=['GET', 'POST'])
@@ -179,7 +179,7 @@ def __main():
   parser.add_argument("port", type=int, help="server port for depoly.")
   args = parser.parse_args()
 
-  global SOCKET
+  global SOCKET  # pylint: disable=global-statement
   SOCKET = init_socket(asr_ip(args.asr_port))
 
   storage_dir = Path('storage')
