@@ -160,7 +160,8 @@ def recognize():
 @app.route('/reset', methods=['POST'])
 def reset():
   """Reset."""
-  global TRX, AISHELL_TRX  # pylint: disable=global-statement
+  global IDX, TRX, AISHELL_IDX, AISHELL_TRX  # pylint: disable=global-statement
+  IDX, AISHELL_IDX = 0, 0
   TRX, AISHELL_TRX = '', ''
   return redirect(url_for('home'))
 
