@@ -7,6 +7,7 @@ import time
 from argparse import ArgumentParser
 from pathlib import Path
 
+import ffmpeg
 from flask import Flask, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
@@ -14,9 +15,6 @@ from werkzeug.utils import secure_filename
 from utils import asr_ip, get_pcm_data_list, init_socket, send_data, TEST_WAV
 
 app = Flask(__name__)
-
-__ALLOWED_EXTENSIONS = {'.wav'}
-
 SOCKET = None
 
 TRX = ''
@@ -25,6 +23,30 @@ PCM_DATA = []
 AISHELL_TRX = ''
 AISHELL_IDX = 0
 AISHELL_PCM_DATA = get_pcm_data_list(TEST_WAV)
+
+
+def __convert_wav(in_audio, out_wav):
+  """Using ffmpeg to convert audio to 16k, mono, pcm.
+
+  Args:
+    in_audio: input audio file.
+    out_wav: output wav file.
+
+  Returns:
+    msg, no msg means succeed.
+  """
+  param = {'fflags': '+bitexact', 'flags:v': '+bitexact',
+           'flags:a': '+bitexact', 'map_metadata': '-1'}
+
+  try:
+    (ffmpeg.input(str(in_audio))
+     .output(filename=str(out_wav), ar=16000, ac=1, acodec='pcm_s16le', **param)
+     .global_args("-ignore_unknown", "-vn")
+     .run(capture_stdout=True, capture_stderr=True))
+  except ffmpeg.Error as ex:
+    return ex.stderr.decode('utf-8')
+  else:
+    return ''
 
 
 def __render(html, aishell_trx='', trx='', stop_aishell=1, stop_asr=1):
@@ -45,18 +67,6 @@ def __render(html, aishell_trx='', trx='', stop_aishell=1, stop_asr=1):
   trx = base_trx + trx
   return render_template(html, aishell_trx=aishell_trx, trx=trx,
                          stop_aishell=stop_aishell, stop_asr=stop_asr)
-
-
-def __allowed_file(filename):
-  """If file is supported.
-
-  Args:
-    filename: file name.
-
-  Returns:
-    If file is supported.
-  """
-  return Path(filename).suffix in __ALLOWED_EXTENSIONS
 
 
 def __asr(pcm_data_list, index):
@@ -100,24 +110,35 @@ def __online_asr():
 def upload_file():
   """Upload file."""
   global PCM_DATA  # pylint: disable=global-statement
-  if 'file' not in request.files:
-    logging.warning(f'file field not found: {request.files}.')
+  try:
+    if 'file' not in request.files:
+      logging.warning(f'file field not found: {request.files}.')
+      return __render('index.html', AISHELL_TRX, TRX)
+
+    file = request.files['file']
+    if file:
+      time_format = "%Y-%m-%d-%H-%M-%S"
+      cur_time = time.strftime(time_format, time.localtime())
+      filename = Path(secure_filename(file.filename))
+      filename = f'test-{cur_time}{filename.suffix}'
+      audio_path = app.config['UPLOAD_FOLDER'] / filename
+      file.save(audio_path)
+      logging.info(f'Save file to {audio_path}.')
+
+      wav_path = app.config['UPLOAD_FOLDER'] / f'{Path(filename).stem}-pcm.wav'
+      msg = __convert_wav(audio_path, wav_path)
+      if not msg:
+        logging.info(f'Convert to {wav_path}.')
+        PCM_DATA = get_pcm_data_list(wav_path)
+        return redirect(url_for('recognize'))
+      else:
+        logging.error(f'Error: {wav_path}, {msg}.')
+        return __render('index.html', AISHELL_TRX, msg, stop_asr=1)
     return __render('index.html', AISHELL_TRX, TRX)
 
-  logging.info('Receive file.')
-  file = request.files['file']
-  if file and __allowed_file(file.filename):
-    time_format = "%Y-%m-%d-%H-%M-%S"
-    cur_time = time.strftime(time_format, time.localtime())
-    filename = Path(secure_filename(file.filename))
-    filename = f'{filename.stem}-{cur_time}{filename.suffix}'
-    audio_path = app.config['UPLOAD_FOLDER'] / filename
-    file.save(audio_path)
-    logging.info(f'Save file to {audio_path}.')
-    PCM_DATA = get_pcm_data_list(audio_path)
-    return redirect(url_for('recognize'))
-
-  return __render('index.html', AISHELL_TRX, TRX)
+  except Exception as e:
+    logging.error(e)
+    return __render('index.html', AISHELL_TRX, str(e), stop_asr=1)
 
 
 @app.route('/aishell', methods=['GET', 'POST'])
@@ -163,7 +184,7 @@ def __main():
   storage_dir = Path('storage')
   storage_dir.mkdir(exist_ok=True)
   app.config['UPLOAD_FOLDER'] = storage_dir
-  app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+  app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
   app.run(host='0.0.0.0', port=f'{args.port}')
 
 
