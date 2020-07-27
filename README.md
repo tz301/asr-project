@@ -7,6 +7,8 @@
 This project shows how to build / deploy fast and independent ASR system based on [Kaldi](https://github.com/kaldi-asr/kaldi)
 and [Tensorflow](https://github.com/tensorflow/tensorflow).
 
+`ASR demo` can be found [head](http://119.45.150.149:9000/).
+
 ## Environment
 
 * gcc=7.5.0
