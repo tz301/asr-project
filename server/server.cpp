@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   PrintTime();
   std::cout << "Load asr model: ." << model_dir << std::endl;
-  std::cout << "Server start in port 6557." << std::endl;
+  std::cout << "Server start in port " << port << "." << std::endl;
 
   while (true) {
     zmq::message_t message;
